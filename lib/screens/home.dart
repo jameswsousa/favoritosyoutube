@@ -1,6 +1,8 @@
 import 'package:bloc_pattern/bloc_pattern.dart';
+import 'package:favoritos_youtube/blocs/favorite_bloc.dart';
 import 'package:favoritos_youtube/blocs/videos_bloc.dart';
 import 'package:favoritos_youtube/delegates/data_search.dart';
+import 'package:favoritos_youtube/models/video.dart';
 import 'package:favoritos_youtube/widgets/video_tile.dart';
 import 'package:flutter/material.dart';
 
@@ -8,6 +10,7 @@ class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bloc = BlocProvider.getBloc<VideoBloc>();
+    final blocfav = BlocProvider.getBloc<FavoriteBloc>();
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -22,8 +25,13 @@ class Home extends StatelessWidget {
             )),
         actions: [
           Container(
-            child: Text(
-              "0",
+            child: StreamBuilder<Map<String,Video>>(
+              stream: blocfav.outFav,
+              initialData: {},
+              builder: (context, snapshot) => Text(
+                snapshot.hasData?snapshot.data.length.toString():''
+                
+              ),
             ),
             alignment: Alignment.center,
           ),
@@ -54,16 +62,18 @@ class Home extends StatelessWidget {
               itemBuilder: (context, index) {
                 if (index < snapshot.data.length) {
                   return VideoTile(snapshot.data[index]);
-                } else if(index>1) {
+                } else if (index > 1) {
                   bloc.inSearch.add(null);
                   return Container(
-                    height: 40, alignment: Alignment.center,
+                    height: 40,
+                    alignment: Alignment.center,
                     width: 40,
                     child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
                     ),
                   );
-                } else return Container();
+                } else
+                  return Container();
               },
               itemCount: snapshot.data.length + 1,
             );
