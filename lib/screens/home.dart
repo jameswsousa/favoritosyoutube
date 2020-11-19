@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 class Home extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final bloc = BlocProvider.getBloc<VideoBloc>();
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -40,20 +41,31 @@ class Home extends StatelessWidget {
               onPressed: () async {
                 String result =
                     await showSearch(context: context, delegate: DataSearch());
-                if (result != null)
-                  BlocProvider.getBloc<VideoBloc>().inSearch.add(result);
+                if (result != null) bloc.inSearch.add(result);
               }),
         ],
       ),
       body: StreamBuilder(
-        stream: BlocProvider.getBloc<VideoBloc>().outVideos,
+        initialData: [],
+        stream: bloc.outVideos,
         builder: (context, snapshot) {
-          if (snapshot.hasData) { 
+          if (snapshot.hasData) {
             return ListView.builder(
               itemBuilder: (context, index) {
-                return VideoTile(snapshot.data[index]);
+                if (index < snapshot.data.length) {
+                  return VideoTile(snapshot.data[index]);
+                } else if(index>1) {
+                  bloc.inSearch.add(null);
+                  return Container(
+                    height: 40, alignment: Alignment.center,
+                    width: 40,
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
+                    ),
+                  );
+                } else return Container();
               },
-              itemCount: snapshot.data.length,
+              itemCount: snapshot.data.length + 1,
             );
           } else {
             return Container();
